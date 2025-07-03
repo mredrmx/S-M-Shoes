@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  surname   String
+  email     String   @unique
+  password  String
+  // address   String? // Bu alan kaldırılıyor veya yorum satırı yapılıyor. Yeni Address modeli kullanılacak.
+  role      String   @default("user") // 'admin' veya 'user'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+  messagesSent     Message[] @relation("MessagesSent")
+  messagesReceived Message[] @relation("MessagesReceived")
+  addresses Address[] // Kullanıcının birden çok adresi olabileceğini belirtir
+  wishlists Wishlist[]
+  comments  Comment[]
+  returnRequests ReturnRequest[]
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  stock       Int
+  imageUrl    String
+  brand       String   // Marka (Nike, Adidas, vb.)
+  category    String   // Kategori (Spor, Günlük, Resmi, vb.)
+  colors      String   // Renkler (JSON string olarak saklanacak)
+  sizes       String   // Boyutlar (JSON string olarak saklanacak)
+  images      String   // Ürün fotoğrafları (JSON string olarak saklanacak)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orderItems  OrderItem[]
+  wishlists   Wishlist[]
+  comments    Comment[]
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  status    String   @default("Beklemede") // "Onaylandı", "Gönderildi", "İptal Edildi" gibi
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  items     OrderItem[]
+  addressId Int?
+  address   Address? @relation(fields: [addressId], references: [id], onDelete: SetNull)
+  returnRequests ReturnRequest[]
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+  quantity  Int
+  price     Float
+  color     String?  // Seçilen renk
+  size      String?  // Seçilen boyut
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  sender    User     @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId  Int
+  receiver  User     @relation("MessagesReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId Int
+  content   String
+  createdAt DateTime @default(now())
+}
+
+// Yeni Adres Modeli
+model Address {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String   // Örn: "Ev", "İş Yeri"
+  recipientName String
+  recipientSurname String
+  phone         String
+  city          String
+  district      String
+  neighborhood  String
+  fullAddress   String   // Kapı no, sokak vb. detaylar
+  isDefault     Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+  createdAt DateTime @default(now())
+  @@unique([userId, productId])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+  rating    Int
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model ReturnRequest {
+  id        Int      @id @default(autoincrement())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  reason    String
+  status    String   @default("Beklemede")
+  createdAt DateTime @default(now())
+}
