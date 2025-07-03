@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "prisma generate"
     "seed:users": "node scripts/create-test-user.js",
     "seed:products": "node scripts/seed-products.js",
     "seed": "npm run seed:users && npm run seed:products"
