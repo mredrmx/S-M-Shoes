@@ -1,11 +1,12 @@
 {
-  "name": "smshoes",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "name": "smshoes",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+    "dev": "next dev --turbopack", 
+    "build": "prisma generate && next build",
     "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint"
     "seed:users": "node scripts/create-test-user.js",
