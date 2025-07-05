@@ -103,18 +103,18 @@ export default function Home() {
             <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center mb-4 md:mb-6 lg:mb-8 text-gray-800 dark:text-gray-200 px-4">
               Öne Çıkan Ürünler
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
               {featuredProducts.map((product) => (
                 <Link
                   key={product.id}
                   href={`/products/${product.id}`}
-                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-transform transition-shadow duration-200 p-4 md:p-6 flex flex-col items-center border border-gray-100 dark:border-gray-700 relative cursor-pointer hover:scale-105 hover:shadow-2xl"
+                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-transform transition-shadow duration-200 p-4 md:p-6 flex flex-col items-center border border-gray-100 dark:border-gray-700 relative cursor-pointer hover:scale-105 hover:shadow-2xl min-w-0"
                 >
                   {/* İstek Listesi Butonu */}
                   <button
                     type="button"
                     onClick={e => { e.preventDefault(); e.stopPropagation(); handleWishlist(product.id); }}
-                    className="absolute top-2 left-2 z-10 p-2 rounded-full bg-white/80 dark:bg-gray-900/80 hover:bg-pink-100 dark:hover:bg-pink-900 transition-colors shadow-md group"
+                    className="wishlist-btn absolute top-2 right-2 z-10 p-2 rounded-full bg-white/80 dark:bg-gray-900/80 hover:bg-pink-100 dark:hover:bg-pink-900 transition-colors shadow-md group w-9 h-9 flex items-center justify-center"
                     aria-label="İstek Listesine Ekle"
                   >
                     {isInWishlist(product.id) ? (
@@ -123,9 +123,12 @@ export default function Home() {
                       <HeartOutline className="w-5 h-5 text-gray-400 group-hover:text-pink-500 transition-colors" />
                     )}
                   </button>
-                  <div className="absolute top-2 md:top-4 right-2 md:right-4 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                    Öne Çıkan
-                  </div>
+                  {/* Öne Çıkan Etiketi */}
+                  {product.featured && (
+                    <span className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold z-10 shadow !inline-block max-w-max whitespace-nowrap">
+                      Öne Çıkan
+                    </span>
+                  )}
                   <div className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mb-3 md:mb-4 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
                     {product.imageUrl ? (
                       <Image
@@ -182,7 +185,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={e => { e.preventDefault(); e.stopPropagation(); handleWishlist(product.id); }}
-                    className="absolute top-2 left-2 z-10 p-2 rounded-full bg-white/80 dark:bg-gray-900/80 hover:bg-pink-100 dark:hover:bg-pink-900 transition-colors shadow-md group"
+                    className="wishlist-btn absolute top-2 right-2 z-10 p-2 rounded-full bg-white/80 dark:bg-gray-900/80 hover:bg-pink-100 dark:hover:bg-pink-900 transition-colors shadow-md group"
                     aria-label="İstek Listesine Ekle"
                   >
                     {isInWishlist(product.id) ? (
@@ -260,7 +263,7 @@ export default function Home() {
               <h3 className="text-lg font-bold text-blue-700 dark:text-blue-300 mb-2">S&M SHOES</h3>
               <p className="mb-3">Türkiye&apos;nin lider ayakkabı mağazası. Kalite, güven ve hızlı teslimat ile hizmetinizdeyiz.</p>
               <div className="flex space-x-3 mt-2">
-                <a href="https://instagram.com/smshoes" target="_blank" rel="noopener" aria-label="Instagram" className="hover:text-blue-600"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.584.012 4.85.07 1.17.056 1.97.24 2.43.41.59.22 1.01.48 1.45.92.44.44.7.86.92 1.45.17.46.354 1.26.41 2.43.058 1.266.07 1.65.07 4.85s-.012 3.584-.07 4.85c-.056 1.17-.24 1.97-.41 2.43-.22.59-.48 1.01-.92 1.45-.44.44-.86.7-1.45.92-.46.17-1.26.354-2.43.41-1.266.058-1.65.07-4.85.07s-3.584-.012-4.85-.07c-1.17-.056-1.97-.24-2.43-.41-.59-.22-1.01-.48-1.45-.92-.44-.44-.7-.86-.92-1.45-.17-.46-.354-1.26-.41-2.43C2.212 15.784 2.2 15.4 2.2 12s.012-3.584.07-4.85c.056-1.17.24-1.97.41-2.43.22-.59.48-1.01.92-1.45.44-.44.86-.7 1.45-.92.46-.17 1.26-.354 2.43-.41C8.416 2.212 8.8 2.2 12 2.2zm0-2.2C8.736 0 8.332.012 7.052.07 5.77.128 4.87.31 4.13.54c-.77.24-1.42.56-2.07 1.21-.65.65-.97 1.3-1.21 2.07-.23.74-.412 1.64-.47 2.92C.012 8.332 0 8.736 0 12c0 3.264.012 3.668.07 4.948.058 1.28.24 2.18.47 2.92.24.77.56 1.42 1.21 2.07.65.65 1.3.97 2.07 1.21.74.23 1.64.412 2.92.47C8.332 23.988 8.736 24 12 24c3.264 0 3.668-.012 4.948-.07 1.28-.058 2.18-.24 2.92-.47.77-.24 1.42-.56 2.07-1.21.65-.65.97-1.3 1.21-2.07.23-.74.412-1.64.47-2.92.058-1.28.07-1.684.07-4.948 0-3.264-.012-3.668-.07-4.948-.058-1.28-.24-2.18-.47-2.92-.24-.77-.56-1.42-1.21-2.07-.65-.65-1.3-.97-2.07-1.21-.74-.23-1.64-.412-2.92-.47C15.668.012 15.264 0 12 0z"/><path d="M12 5.838A6.162 6.162 0 1 0 12 18.162 6.162 6.162 0 1 0 12 5.838zm0 10.162A4 4 0 1 1 12 8a4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg></a>
+                <a href="https://instagram.com/smshoes" target="_blank" rel="noopener" aria-label="Instagram" className="hover:text-blue-600"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.584.012 4.85.07 1.17.056 1.97.24 2.43.41.59.22 1.01.48 1.45.92.44.44.7.86.92 1.45.17.46.354 1.26.41 2.43.058 1.266.07 1.65.07 4.85s-.012 3.584-.07 4.85c-.056 1.17-.24 1.97-.41 2.43-.22.59-.48 1.01-.92 1.45-.44.44-.7-.86-.92-1.45-.17-.46-.354-1.26-.41-2.43C2.212 15.784 2.2 15.4 2.2 12s.012-3.584.07-4.85c.056-1.17.24-1.97.41-2.43.22-.59.48-1.01.92-1.45.44-.44.86-.7 1.45-.92.46-.17 1.26-.354 2.43-.41C8.416 2.212 8.8 2.2 12 2.2zm0-2.2C8.736 0 8.332.012 7.052.07 5.77.128 4.87.31 4.13.54c-.77.24-1.42.56-2.07 1.21-.65.65-.97 1.3-1.21 2.07-.23.74-.412 1.64-.47 2.92C.012 8.332 0 8.736 0 12c0 3.264.012 3.668.07 4.948.058 1.28.24 2.18.47 2.92.24.77.56 1.42 1.21 2.07.65.65 1.3.97 2.07 1.21.74.23 1.64.412 2.92.47C8.332 23.988 8.736 24 12 24c3.264 0 3.668-.012 4.948-.07 1.28-.058 2.18-.24 2.92-.47.77-.24 1.42-.56 2.07-1.21.65-.65.97-1.3 1.21-2.07.23-.74.412-1.64.47-2.92.058-1.28.07-1.684.07-4.948 0-3.264-.012-3.668-.07-4.948-.058-1.28-.24-2.18-.47-2.92-.24-.77-.56-1.42-1.21-2.07-.65-.65-1.3-.97-2.07-1.21-.74-.23-1.64-.412-2.92-.47C15.668.012 15.264 0 12 0z"/><path d="M12 5.838A6.162 6.162 0 1 0 12 18.162 6.162 6.162 0 1 0 12 5.838zm0 10.162A4 4 0 1 1 12 8a4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg></a>
                 <a href="https://facebook.com/smshoes" target="_blank" rel="noopener" aria-label="Facebook" className="hover:text-blue-600"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.326 24H12.82v-9.294H9.692v-3.622h3.127V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116C23.406 24 24 23.408 24 22.674V1.326C24 .592 23.406 0 22.675 0"/></svg></a>
                 <a href="https://twitter.com/smshoes" target="_blank" rel="noopener" aria-label="Twitter" className="hover:text-blue-600"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557a9.83 9.83 0 0 1-2.828.775 4.932 4.932 0 0 0 2.165-2.724c-.951.564-2.005.974-3.127 1.195a4.916 4.916 0 0 0-8.38 4.482C7.691 8.095 4.066 6.13 1.64 3.161c-.542.929-.856 2.01-.857 3.17 0 2.188 1.115 4.116 2.823 5.247a4.904 4.904 0 0 1-2.229-.616c-.054 2.281 1.581 4.415 3.949 4.89a4.936 4.936 0 0 1-2.224.084c.627 1.956 2.444 3.377 4.6 3.417A9.867 9.867 0 0 1 0 21.543a13.94 13.94 0 0 0 7.548 2.209c9.057 0 14.009-7.496 14.009-13.986 0-.213-.005-.425-.014-.636A9.936 9.936 0 0 0 24 4.557z"/></svg></a>
               </div>

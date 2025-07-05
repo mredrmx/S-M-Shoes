@@ -2,6 +2,10 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
+import { useWishlist } from "@/context/WishlistContext";
+import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
+import { HeartIcon as HeartOutline } from "@heroicons/react/24/outline";
 
 type Product = {
   id: number;
@@ -22,6 +26,20 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("Tüm Ürünler");
+
+  const { user } = useAuth();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const handleWishlist = async (productId: number) => {
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
+    if (isInWishlist(productId)) {
+      await removeFromWishlist(productId);
+    } else {
+      await addToWishlist(productId);
+    }
+  };
 
   const fetchProducts = useCallback(async (category?: string) => {
     let url = "/api/products";
@@ -74,8 +92,20 @@ export default function ProductsPage() {
             <div
               key={product.id}
               onClick={() => handleProductClick(product.id)}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-transform transition-shadow duration-200 cursor-pointer hover:scale-105 hover:shadow-2xl p-4 flex flex-col items-center border border-gray-100 dark:border-gray-700"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-transform transition-shadow duration-200 cursor-pointer hover:scale-105 hover:shadow-2xl p-4 flex flex-col items-center border border-gray-100 dark:border-gray-700 relative"
             >
+              <button
+                type="button"
+                onClick={e => { e.preventDefault(); e.stopPropagation(); handleWishlist(product.id); }}
+                className="wishlist-btn absolute top-2 right-2 z-10 p-2 rounded-full bg-white/80 dark:bg-gray-900/80 hover:bg-pink-100 dark:hover:bg-pink-900 transition-colors shadow-md group w-9 h-9 flex items-center justify-center"
+                aria-label="İstek Listesine Ekle"
+              >
+                {isInWishlist(product.id) ? (
+                  <HeartSolid className="w-5 h-5 text-pink-500 transition-colors" />
+                ) : (
+                  <HeartOutline className="w-5 h-5 text-gray-400 group-hover:text-pink-500 transition-colors" />
+                )}
+              </button>
               {product.imageUrl && (
                 <Image
                   src={product.imageUrl}

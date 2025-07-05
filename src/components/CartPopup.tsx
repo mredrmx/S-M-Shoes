@@ -77,6 +77,8 @@ export default function CartPopup() {
     router.push("/checkout");
   };
 
+  if (!isCartOpen) return null;
+
   return (
     <>
       {/* Arka plan overlay */}
@@ -88,9 +90,9 @@ export default function CartPopup() {
       />
       {/* Sepet paneli */}
       <div
-        className={`fixed top-0 right-0 h-full w-full md:max-w-md bg-white dark:bg-gray-800 shadow-2xl z-50 transform transition-transform ${
-          isCartOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed top-0 left-0 w-full h-full z-50 bg-white dark:bg-gray-800 shadow-2xl transform transition-transform overflow-x-hidden
+        ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}
+        md:right-0 md:left-auto md:w-[400px] md:max-w-md md:translate-x-0 md:${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="flex flex-col h-full">
             {/* Header */}

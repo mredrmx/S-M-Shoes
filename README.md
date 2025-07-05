@@ -29,7 +29,7 @@ S&M Shoes, modern ve kullanıcı dostu bir ayakkabı e-ticaret platformudur. Pro
    Ana dizinde `.env.local` dosyası oluşturun ve aşağıdaki örneğe göre doldurun:
    ```env
    DATABASE_URL="file:./prisma/dev.db"
-   JWT_SECRET="gizli_bir_anahtar"
+   JWT_SECRET=""ekinler_bas_vermeden_kor_buzagı_topallamazmıs""
    ```
 4. **Veritabanı migrasyonlarını ve seed işlemlerini çalıştırın:**
    ```bash

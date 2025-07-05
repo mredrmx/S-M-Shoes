@@ -54,7 +54,35 @@ export default function Navbar() {
         <Link href="/" className="font-bold text-2xl text-blue-700 dark:text-blue-200 tracking-tight uppercase">
           S&M SHOES
         </Link>
-        
+        <div className="flex items-center gap-2 md:hidden ml-auto order-2">
+          <button
+            onClick={toggleCart}
+            className="relative p-2 min-w-[44px] w-auto h-auto rounded-full transition duration-150 hover:bg-blue-100 dark:hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 group cursor-pointer"
+            aria-label="Sepetim"
+          >
+            <span className="relative inline-block w-7 h-7 align-middle">
+              <ShoppingCartIcon className="h-6 w-6 text-gray-700 dark:text-gray-200 group-hover:text-blue-600 group-hover:dark:text-blue-400 transition-colors"/>
+              {itemCount > 0 && (
+                <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md border-2 border-white dark:border-gray-900 z-10">
+                  {itemCount}
+                </span>
+              )}
+            </span>
+          </button>
+          <button
+            onClick={toggleMenu}
+            className="p-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            aria-label="Menü"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {isMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+        </div>
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-4">
           <Link href="/products" className="rounded-lg px-3 py-1.5 text-gray-700 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-900 transition">Ürünler</Link>
@@ -89,29 +117,17 @@ export default function Navbar() {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-          <button onClick={toggleCart} className="relative p-2 rounded-full transition duration-150 hover:bg-blue-100 dark:hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 group cursor-pointer">
-            <ShoppingCartIcon className="h-6 w-6 text-gray-700 dark:text-gray-200 group-hover:text-blue-600 group-hover:dark:text-blue-400 transition-colors"/>
-            {itemCount > 0 && (
-                <span className="absolute top-0 right-0 block h-5 w-5 rounded-full bg-red-600 text-white text-xs flex items-center justify-center ring-2 ring-white dark:ring-gray-800">
-                    {itemCount}
+          <button onClick={toggleCart} className="relative p-2 min-w-[44px] min-h-[44px] rounded-full transition duration-150 hover:bg-blue-100 dark:hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 group cursor-pointer">
+            <span className="relative inline-block w-7 h-7 align-middle">
+              <ShoppingCartIcon className="h-6 w-6 text-gray-700 dark:text-gray-200 group-hover:text-blue-600 group-hover:dark:text-blue-400 transition-colors"/>
+              {itemCount > 0 && (
+                <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md border-2 border-white dark:border-gray-900 z-10">
+                  {itemCount}
                 </span>
-            )}
+              )}
+            </span>
           </button>
         </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          onClick={toggleMenu}
-          className="md:hidden p-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {isMenuOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
-        </button>
       </div>
 
       {/* Mobile Menu */}
@@ -124,22 +140,6 @@ export default function Navbar() {
             {user?.role?.toLowerCase() === "admin" && (
               <Link href="/admin" className="block rounded-lg px-3 py-2 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950 transition" onClick={() => setIsMenuOpen(false)}>Admin Paneli</Link>
             )}
-            
-            {/* Sepet Butonu */}
-            <button 
-              onClick={() => {
-                toggleCart();
-                setIsMenuOpen(false);
-              }} 
-              className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-900 transition"
-            >
-              <span>Sepet</span>
-              {itemCount > 0 && (
-                <span className="h-5 w-5 rounded-full bg-red-600 text-white text-xs flex items-center justify-center">
-                  {itemCount}
-                </span>
-              )}
-            </button>
             
             {user ? (
                 <>

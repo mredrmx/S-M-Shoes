@@ -21,8 +21,6 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   orders    Order[]
-  messagesSent     Message[] @relation("MessagesSent")
-  messagesReceived Message[] @relation("MessagesReceived")
   addresses Address[] // Kullanıcının birden çok adresi olabileceğini belirtir
   wishlists Wishlist[]
   comments  Comment[]
@@ -74,15 +72,7 @@ model OrderItem {
   size      String?  // Seçilen boyut
 }
 
-model Message {
-  id        Int      @id @default(autoincrement())
-  sender    User     @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
-  senderId  Int
-  receiver  User     @relation("MessagesReceived", fields: [receiverId], references: [id], onDelete: Cascade)
-  receiverId Int
-  content   String
-  createdAt DateTime @default(now())
-}
+
 
 // Yeni Adres Modeli
 model Address {

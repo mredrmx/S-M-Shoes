@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
-import ChatPopup from "@/components/ChatPopup";
+
 import { CartProvider } from "@/context/CartContext";
 import CartPopup from "@/components/CartPopup";
 import { AuthProvider } from "@/context/AuthContext";
@@ -41,7 +41,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
         <AuthProvider>
           <CartProvider>
@@ -49,7 +49,6 @@ export default function RootLayout({
               <Navbar />
               <CartPopup />
               {children}
-              <ChatPopup />
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>
