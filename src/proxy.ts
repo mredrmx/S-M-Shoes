@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "ekinler_bas_vermeden_kor_buzagı_t
 const adminRoutes = ["/admin", "/admin/products", "/admin/orders", "/admin/users"];
 const adminApiRoutes = ["/api/admin", "/api/admin/products", "/api/admin/orders", "/api/admin/users"];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isApiRoute = pathname.startsWith("/api/");
   
