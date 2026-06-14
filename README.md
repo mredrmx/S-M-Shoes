@@ -18,8 +18,8 @@ S&M Shoes, modern ve kullanıcı dostu bir ayakkabı e-ticaret platformudur. Pro
 
 1. **Projeyi klonlayın:**
    ```bash
-   git clone https://github.com/mredrmx/S-M-Shoes.git
-   cd S-M-Shoes
+   git clone https://github.com/mredrmx/shoeshop.git
+   cd shoeshop
    ```
 2. **Bağımlılıkları yükleyin:**
    ```bash
