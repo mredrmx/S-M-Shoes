@@ -7,7 +7,7 @@ export default function ContactPage() {
         <h1 className="text-3xl md:text-4xl font-bold text-blue-700 dark:text-blue-300 mb-6 text-center">İletişim</h1>
         <div className="mb-8">
           <p className="mb-2 text-gray-700 dark:text-gray-300"><b>Telefon:</b> <a href="tel:+905551112233" className="hover:text-blue-600">+90 555 111 22 33</a></p>
-          <p className="mb-2 text-gray-700 dark:text-gray-300"><b>E-posta:</b> <a href="mailto:info@smshoes.com" className="hover:text-blue-600">info@smshoes.com</a></p>
+          <p className="mb-2 text-gray-700 dark:text-gray-300"><b>E-posta:</b> <a href="mailto:info@ayakkabici.com" className="hover:text-blue-600">info@ayakkabici.com</a></p>
           <p className="mb-2 text-gray-700 dark:text-gray-300"><b>Adres:</b> Karabük, Türkiye</p>
         </div>
         <form className="space-y-4">

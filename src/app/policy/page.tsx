@@ -9,7 +9,7 @@ export default function PolicyPage() {
         <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4">
           <li>Ürünü teslim aldıktan sonra 14 gün içinde iade talebinde bulunabilirsiniz.</li>
           <li>İade edilecek ürün kullanılmamış, orijinal kutusunda ve tüm aksesuarlarıyla birlikte olmalıdır.</li>
-          <li>İade işlemi için <b>info@smshoes.com</b> adresine e-posta gönderebilirsiniz.</li>
+          <li>İade işlemi için <b>info@ayakkabici.com</b> adresine e-posta gönderebilirsiniz.</li>
           <li>İade kargo ücreti, ürün kusurlu değilse müşteriye aittir.</li>
         </ul>
         <h2 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Teslimat Bilgileri</h2>

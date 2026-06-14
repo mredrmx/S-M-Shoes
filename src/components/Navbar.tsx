@@ -52,7 +52,7 @@ export default function Navbar() {
     <nav className="backdrop-blur bg-white/80 dark:bg-gray-900/80 shadow-lg transition-all sticky top-0 z-40">
       <div className="container mx-auto flex justify-between items-center py-3 px-4">
         <Link href="/" className="font-bold text-2xl text-blue-700 dark:text-blue-200 tracking-tight uppercase">
-          S&M SHOES
+          AYAKKABICI
         </Link>
         
         {/* Desktop Menu */}

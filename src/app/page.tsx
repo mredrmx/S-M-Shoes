@@ -83,7 +83,7 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-950 dark:to-blue-950/40 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300 font-medium">S&M Shoes yükleniyor...</p>
+          <p className="text-gray-600 dark:text-gray-300 font-medium">Ayakkabıcı yükleniyor...</p>
         </div>
       </div>
     );
@@ -115,7 +115,7 @@ export default function Home() {
         {/* Header Hero Area */}
         <header className="mb-12 md:mb-16 text-center max-w-2xl mx-auto space-y-4">
           <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 tracking-tight uppercase">
-            S&M SHOES
+            AYAKKABICI
           </h1>
           <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 leading-relaxed px-4">
             Türkiye'nin her yerine ekspres teslimat güvencesiyle, en yeni ve en kaliteli ayakkabı koleksiyonu adımlarınıza şıklık katmak için burada!

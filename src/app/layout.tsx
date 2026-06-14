@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'S&M Shoes',
+  title: 'Ayakkabıcı',
   description: 'Modern ayakkabı e-ticaret sitesi',
 };
 
