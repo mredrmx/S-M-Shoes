@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../../../lib/prisma";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { Prisma } from "@prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET || "ekinler_bas_vermeden_kor_buzagı_topallamazmıs";
 
@@ -91,7 +92,7 @@ export async function PUT(req: NextRequest) {
 
     // Stok iade kontrolü (İptal Edildi durumuna geçerken)
     if (status.toLowerCase() === "iptal edildi" && existingOrder.status.toLowerCase() !== "iptal edildi") {
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         for (const item of existingOrder.items) {
           await tx.product.update({
             where: { id: item.productId },

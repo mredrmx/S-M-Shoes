@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { Prisma } from "@prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET || "ekinler_bas_vermeden_kor_buzagı_topallamazmıs";
 
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // Stok kontrolü ve sipariş oluşturma işlemini bir transaction ile yapalım
-    const order = await prisma.$transaction(async (tx) => {
+    const order = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // 1. Ürünlerin stoklarını kontrol et ve düşür
       for (const item of items) {
         const product = await tx.product.findUnique({
