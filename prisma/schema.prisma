@@ -29,6 +29,7 @@ model User {
   comments  Comment[]
   returnRequests ReturnRequest[]
   deleteRequest Boolean @default(false)
+  lastActive    DateTime?
 }
 
 model Product {
