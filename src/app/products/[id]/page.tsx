@@ -4,6 +4,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
+import { toast } from "sonner";
+
 
 type Product = {
   id: number;
@@ -110,16 +112,17 @@ export default function ProductDetailPage() {
     if (!product) return;
     
     if (!selectedSize) {
-      alert("Lütfen bir beden seçin.");
+      toast.warning("Lütfen bir beden seçin.");
       return;
     }
     
     if (colors.length > 0 && !selectedColor) {
-      alert("Lütfen bir renk seçin.");
+      toast.warning("Lütfen bir renk seçin.");
       return;
     }
 
     addToCart(product, 1, selectedColor, selectedSize);
+    toast.success(`${product.name} sepete eklendi!`);
   };
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
@@ -165,10 +168,51 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-950 dark:to-blue-950/40 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Detaylar yükleniyor...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-950 dark:via-gray-950 dark:to-blue-950/20 p-4 md:p-8">
+        <div className="w-full max-w-6xl mx-auto animate-page-fade">
+          {/* Breadcrumb Skeleton */}
+          <div className="h-4 w-48 bg-gray-200 dark:bg-gray-800 rounded mb-6 animate-pulse" />
+
+          {/* Details Split Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 bg-white/60 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-800 p-6 md:p-8 rounded-3xl mb-12">
+            {/* Left - Image Gallery Skeleton */}
+            <div className="space-y-4">
+              <div className="aspect-square bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />
+              <div className="grid grid-cols-5 gap-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="aspect-square bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            </div>
+
+            {/* Right - Product Info Skeleton */}
+            <div className="flex flex-col justify-between space-y-6">
+              <div className="space-y-5">
+                <div className="flex gap-2">
+                  <div className="h-6 w-16 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse" />
+                  <div className="h-6 w-24 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse" />
+                </div>
+                <div className="h-10 w-3/4 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse" />
+                <div className="space-y-2">
+                  <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
+                  <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
+                  <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
+                </div>
+                <div className="h-14 w-full bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-750 rounded-2xl animate-pulse" />
+                
+                {/* Size Selection Skeleton */}
+                <div className="space-y-2 pt-2">
+                  <div className="h-4 w-32 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+                  <div className="flex gap-2.5">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="h-12 w-12 bg-gray-250 dark:bg-gray-850 rounded-xl animate-pulse" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="h-14 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -8,6 +8,8 @@ import { CartProvider } from "@/context/CartContext";
 import CartPopup from "@/components/CartPopup";
 import { AuthProvider } from "@/context/AuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
+import PageAnimatePresence from "@/components/PageAnimatePresence";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,16 +44,19 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
               <Navbar />
               <CartPopup />
-              {children}
+              <PageAnimatePresence>
+                {children}
+              </PageAnimatePresence>
               <Footer />
               <ChatPopup />
+              <Toaster richColors position="top-right" />
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>

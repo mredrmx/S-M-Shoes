@@ -231,3 +231,31 @@ html {
 button {
   cursor: pointer;
 }
+
+/* Sayfa Geçiş Animasyonu (Canlı & Yumuşak) */
+@keyframes pageFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-fade {
+  animation: pageFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Premium Dokunsal Etkileşimler (Haptics) */
+button,
+a.btn {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+button:active,
+a.btn:active {
+  transform: scale(0.97) translateY(0.5px);
+}
+

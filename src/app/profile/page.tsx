@@ -95,7 +95,24 @@ export default function ProfilePage() {
   if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-900 dark:to-blue-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="bg-white dark:bg-gray-800/80 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 w-full max-w-md space-y-5 animate-page-fade">
+          <div className="h-7 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+          <div className="space-y-2">
+            <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <div className="h-12 w-full bg-gray-100 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 animate-pulse" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              <div className="h-12 w-full bg-gray-100 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              <div className="h-12 w-full bg-gray-100 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 animate-pulse" />
+            </div>
+          </div>
+          <div className="h-12 w-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse ml-auto" />
+        </div>
       </div>
     );
   }

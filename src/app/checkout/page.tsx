@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { Listbox } from '@headlessui/react';
 import Image from "next/image";
+import { toast } from "sonner";
+
 
 interface Address {
   id: number;
@@ -108,12 +110,20 @@ export default function CheckoutPage() {
   };
 
   const handleGuestInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setGuestForm({ ...guestForm, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'phone') {
+      const cleanValue = value.replace(/\D/g, '').slice(0, 11);
+      setGuestForm(prev => ({ ...prev, [name]: cleanValue }));
+      return;
+    }
+    setGuestForm({ ...guestForm, [name]: value });
   };
 
   const handleOrder = async () => {
     if (user && !selectedAddressId) {
-      setError("Lütfen bir teslimat adresi seçin.");
+      const msg = "Lütfen bir teslimat adresi seçin.";
+      setError(msg);
+      toast.warning(msg);
       return;
     }
 
@@ -121,7 +131,15 @@ export default function CheckoutPage() {
       // Misafir bilgileri doğrulaması
       const { email, recipientName, recipientSurname, phone, city, district, neighborhood, fullAddress } = guestForm;
       if (!email || !recipientName || !recipientSurname || !phone || !city || !district || !neighborhood || !fullAddress) {
-        setError("Lütfen misafir sipariş formundaki tüm zorunlu alanları doldurun.");
+        const msg = "Lütfen misafir sipariş formundaki tüm zorunlu alanları doldurun.";
+        setError(msg);
+        toast.warning(msg);
+        return;
+      }
+      if (phone.length !== 11) {
+        const msg = "Telefon numarası 11 haneli olmalıdır (örn: 05551234567).";
+        setError(msg);
+        toast.warning(msg);
         return;
       }
     }
@@ -165,6 +183,7 @@ export default function CheckoutPage() {
       }
 
       setSuccess(true);
+      toast.success("Siparişiniz başarıyla alındı! Alışverişiniz için teşekkür ederiz.");
       localStorage.removeItem("cart");
 
       // Kullanıcı giriş yaptıysa siparişler sayfasına yönlendir, misafir ise anasayfaya yönlendir
@@ -172,13 +191,14 @@ export default function CheckoutPage() {
         if (user) {
           router.push("/orders");
         } else {
-          alert("Siparişiniz başarıyla alındı! Alışverişiniz için teşekkür ederiz.");
           router.push("/");
         }
       }, 1500);
 
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Sipariş oluşturulamadı.");
+      const msg = err instanceof Error ? err.message : "Sipariş oluşturulamadı.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -320,7 +340,7 @@ export default function CheckoutPage() {
                   <input
                     type="tel"
                     name="phone"
-                    placeholder="Telefon Numarası *"
+                    placeholder="Telefon Numarası (örn: 05551234567) *"
                     value={guestForm.phone}
                     onChange={handleGuestInputChange}
                     className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"

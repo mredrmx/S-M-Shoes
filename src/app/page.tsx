@@ -80,10 +80,44 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-950 dark:to-blue-950/40 flex items-center justify-center px-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300 font-medium">Ayakkabıcı yükleniyor...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/50 dark:from-gray-950 dark:via-gray-950 dark:to-blue-950/30">
+        <div className="container mx-auto py-8 md:py-12 px-4 max-w-7xl animate-page-fade">
+          {/* Header Hero Area Skeleton */}
+          <div className="mb-12 md:mb-16 text-center max-w-2xl mx-auto space-y-4">
+            <div className="h-12 w-64 bg-gray-200 dark:bg-gray-800 rounded-2xl mx-auto animate-pulse" />
+            <div className="h-4 w-5/6 bg-gray-200 dark:bg-gray-800 rounded-xl mx-auto animate-pulse" />
+            <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-800 rounded-xl mx-auto animate-pulse" />
+          </div>
+
+          {/* Section 1 Title Skeleton */}
+          <div className="mb-8">
+            <div className="h-8 w-72 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse" />
+            <div className="h-4 w-48 bg-gray-200 dark:bg-gray-800/80 rounded-lg mt-2 animate-pulse" />
+          </div>
+
+          {/* Cards Grid Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-white dark:bg-gray-900/40 backdrop-blur-sm rounded-2xl p-5 border border-gray-100 dark:border-gray-800 flex flex-col space-y-4 shadow-sm"
+              >
+                <div className="w-full aspect-square bg-gray-250 dark:bg-gray-800 rounded-xl animate-pulse" />
+                <div className="h-5 w-2/3 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
+                <div className="space-y-2">
+                  <div className="h-3 w-full bg-gray-200 dark:bg-gray-800/60 rounded-md animate-pulse" />
+                  <div className="h-3 w-4/5 bg-gray-200 dark:bg-gray-800/60 rounded-md animate-pulse" />
+                </div>
+                <div className="flex items-center justify-between w-full mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <div className="flex flex-col space-y-1">
+                    <div className="h-3 w-12 bg-gray-200 dark:bg-gray-800 rounded-md animate-pulse" />
+                    <div className="h-5 w-20 bg-gray-200 dark:bg-gray-800 rounded-md animate-pulse" />
+                  </div>
+                  <div className="h-6 w-16 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

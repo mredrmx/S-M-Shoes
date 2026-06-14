@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import jwt from "jsonwebtoken";
+import { toast } from "sonner";
+
 
 type UserInfo = { id: number; email: string; role: string } | null;
 
@@ -126,10 +128,17 @@ export default function AdminUsersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-900 dark:to-blue-950 flex items-center justify-center px-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Yükleniyor...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-900 dark:to-blue-950 p-4 md:p-8">
+        <div className="max-w-6xl mx-auto space-y-6 animate-page-fade">
+          <div className="h-10 w-48 bg-gray-200 dark:bg-gray-800 rounded-xl mx-auto animate-pulse" />
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 space-y-4">
+            <div className="h-6 w-32 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-10 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );

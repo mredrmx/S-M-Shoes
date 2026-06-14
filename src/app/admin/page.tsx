@@ -65,10 +65,29 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-900 dark:to-blue-950 flex items-center justify-center px-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Yükleniyor...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-900 dark:to-blue-950 p-4 md:p-8">
+        <div className="max-w-6xl mx-auto space-y-6 animate-page-fade">
+          <div className="h-10 w-64 bg-gray-200 dark:bg-gray-800 rounded-xl mx-auto animate-pulse" />
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 space-y-4">
+            <div className="h-6 w-48 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="h-12 bg-gray-250 dark:bg-gray-700/60 rounded-lg animate-pulse" />
+              <div className="h-12 bg-gray-250 dark:bg-gray-700/60 rounded-lg animate-pulse" />
+              <div className="h-12 bg-gray-250 dark:bg-gray-700/60 rounded-lg animate-pulse" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-6 space-y-4">
+                <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+                <div className="space-y-2">
+                  <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                  <div className="h-4 w-5/6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                </div>
+                <div className="h-12 w-full bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

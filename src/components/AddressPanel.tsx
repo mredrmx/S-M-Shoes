@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Address } from '@/app/addresses/page';
 import Combobox from '@/components/ui/Combobox';
+import { toast } from 'sonner';
 // import addressDataRaw from '@/lib/data/turkey-address.json'; // HATALI IMPORT KALDIRILDI
 
 // Yeni, daha kapsamlı veri yapısı için tipler
@@ -119,11 +120,20 @@ export default function AddressPanel({ isOpen, onCloseAction, onSaveAction, addr
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    if (name === 'phone') {
+      const cleanValue = value.replace(/\D/g, '').slice(0, 11);
+      setFormData(prev => ({ ...prev, [name]: cleanValue }));
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.phone.length !== 11) {
+      toast.warning('Telefon numarası 11 haneli olmalıdır (örn: 05551234567).');
+      return;
+    }
     setLoading(true);
     setError('');
     const token = localStorage.getItem("token");
@@ -140,9 +150,12 @@ export default function AddressPanel({ isOpen, onCloseAction, onSaveAction, addr
         const data = await res.json();
         throw new Error(data.error || 'İşlem başarısız.');
       }
+      toast.success(address ? 'Adres başarıyla güncellendi!' : 'Adres başarıyla eklendi!');
       onSaveAction();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Bir hata oluştu.');
+      const msg = err instanceof Error ? err.message : 'Bir hata oluştu.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -161,7 +174,7 @@ export default function AddressPanel({ isOpen, onCloseAction, onSaveAction, addr
             <form onSubmit={handleSubmit} className="space-y-4">
               <input name="recipientName" placeholder="Ad" value={formData.recipientName} onChange={handleInputChange} required className="w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
               <input name="recipientSurname" placeholder="Soyad" value={formData.recipientSurname} onChange={handleInputChange} required className="w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-              <input name="phone" placeholder="Telefon" value={formData.phone} onChange={handleInputChange} required className="w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+              <input type="tel" name="phone" placeholder="Telefon (örn: 05551234567)" value={formData.phone} onChange={handleInputChange} required className="w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
               <input name="title" placeholder="Adres Başlığı (örn: Ev, İş)" value={formData.title} onChange={handleInputChange} required className="w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
 
               <Combobox
