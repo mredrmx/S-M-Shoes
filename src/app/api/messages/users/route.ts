@@ -46,7 +46,13 @@ export async function GET(req: NextRequest) {
         select: { senderId: true, receiverId: true },
       });
       
-      const userIds = Array.from(new Set(chats.flatMap(c => [c.senderId, c.receiverId]).filter(id => id !== userId)));
+      const userIds = Array.from(
+        new Set(
+          chats
+            .flatMap((c: { senderId: number; receiverId: number }) => [c.senderId, c.receiverId])
+            .filter((id: number) => id !== userId)
+        )
+      );
       
       const users = await prisma.user.findMany({
         where: { id: { in: userIds } },
@@ -55,8 +61,15 @@ export async function GET(req: NextRequest) {
 
       // Her kullanıcının admin için kaç adet okunmamış mesajı olduğunu hesapla
       const usersWithUnread = await Promise.all(
-        users.map(async (u) => {
-          const unreadCount = await prisma.message.count({
+        users.map(
+          async (u: {
+            id: number;
+            name: string;
+            surname: string;
+            email: string;
+            lastActive: Date | null;
+          }) => {
+            const unreadCount = await prisma.message.count({
             where: {
               senderId: u.id,
               receiverId: userId,
