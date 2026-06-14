@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     } else {
       // Müşteri: Sadece adminleri listele (doğrudan adminle yazışacak)
       const admins = await prisma.user.findMany({
-        where: { role: "admin" },
+        where: { role: { in: ["admin", "ADMIN"] } },
         select: { id: true, name: true, surname: true, email: true, lastActive: true }
       });
       return NextResponse.json({ users: admins });

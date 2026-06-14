@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
       // Müşteri / Misafir pingi için admin durumunu çek
       const adminUser = await prisma.user.findFirst({
-        where: { role: "admin" }
+        where: { role: { in: ["admin", "ADMIN"] } }
       });
 
       if (!adminUser) {
@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
     if (user.role.toLowerCase() !== "admin") {
       // Müşteri: Sadece ilk admin ile olan mesajlaşmaları getir
       const adminUser = await prisma.user.findFirst({
-        where: { role: "admin" }
+        where: { role: { in: ["admin", "ADMIN"] } }
       });
 
       if (!adminUser) {
@@ -139,19 +139,37 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
   
   const { receiverId, content } = await req.json();
-  if (!receiverId || !content) {
-    return NextResponse.json({ error: "Tüm alanlar zorunludur." }, { status: 400 });
+  if (!content || !content.trim()) {
+    return NextResponse.json({ error: "Mesaj içeriği boş olamaz." }, { status: 400 });
   }
   
   try {
     // Aktiflik durumunu güncelle
-    await prisma.user.update({
+    const sender = await prisma.user.update({
       where: { id: userId },
       data: { lastActive: new Date() }
     });
 
+    let targetReceiverId = receiverId ? Number(receiverId) : null;
+
+    if (sender.role.toLowerCase() !== "admin") {
+      // Gönderen müşteri ise, alıcı otomatik olarak sistemdeki ilk admin olmalı
+      const adminUser = await prisma.user.findFirst({
+        where: { role: { in: ["admin", "ADMIN"] } }
+      });
+      if (!adminUser) {
+        return NextResponse.json({ error: "Sistemde aktif destek yetkilisi bulunamadı." }, { status: 404 });
+      }
+      targetReceiverId = adminUser.id;
+    } else {
+      // Gönderen admin ise, alıcı ID'si (receiverId) zorunludur
+      if (!targetReceiverId) {
+        return NextResponse.json({ error: "Alıcı seçilmelidir." }, { status: 400 });
+      }
+    }
+
     const message = await prisma.message.create({
-      data: { senderId: userId, receiverId: Number(receiverId), content },
+      data: { senderId: userId, receiverId: targetReceiverId, content: content.trim() },
       include: { sender: true, receiver: true },
     });
     
