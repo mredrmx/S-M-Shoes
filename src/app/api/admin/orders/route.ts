@@ -79,6 +79,28 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    // Mevcut siparişi ve öğelerini al
+    const existingOrder = await prisma.order.findUnique({
+      where: { id },
+      include: { items: true }
+    });
+
+    if (!existingOrder) {
+      return NextResponse.json({ error: "Sipariş bulunamadı." }, { status: 404 });
+    }
+
+    // Stok iade kontrolü (İptal Edildi durumuna geçerken)
+    if (status.toLowerCase() === "iptal edildi" && existingOrder.status.toLowerCase() !== "iptal edildi") {
+      await prisma.$transaction(async (tx) => {
+        for (const item of existingOrder.items) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } }
+          });
+        }
+      });
+    }
+
     const order = await prisma.order.update({
       where: { id },
       data: { status },
@@ -106,9 +128,10 @@ export async function PUT(req: NextRequest) {
     });
 
     return NextResponse.json({ order });
-  } catch {
+  } catch (error: any) {
+    console.error("Admin order update error:", error);
     return NextResponse.json(
-      { error: "Sipariş güncellenirken bir hata oluştu." },
+      { error: error.message || "Sipariş güncellenirken bir hata oluştu." },
       { status: 500 }
     );
   }

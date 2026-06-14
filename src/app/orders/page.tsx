@@ -16,6 +16,7 @@ type Order = {
   status: string;
   createdAt: string;
   items: OrderItem[];
+  returnRequests?: { id: number; status: string }[];
 };
 
 export default function OrdersPage() {
@@ -141,12 +142,18 @@ export default function OrdersPage() {
                   ))}
                   {order.status.toLowerCase() !== "iptal edildi" && (
                     <div className="flex gap-4 mt-4">
-                      <button
-                        onClick={() => handleCancel(order.id)}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
-                      >
-                        Siparişi İptal Et
-                      </button>
+                      {order.returnRequests && order.returnRequests.length > 0 ? (
+                        <span className="px-3.5 py-2 bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30 rounded-xl text-xs font-bold shadow-sm">
+                          ⏳ İptal Talebi Değerlendiriliyor
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleCancel(order.id)}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                        >
+                          Siparişi İptal Et
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

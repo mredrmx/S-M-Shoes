@@ -13,6 +13,7 @@ type User = {
   email: string;
   role: string;
   createdAt: string;
+  deleteRequest: boolean;
   _count: {
     orders: number;
     addresses: number;
@@ -98,6 +99,31 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleRejectDelete = async (userId: number) => {
+    if (!confirm("Bu kullanıcının hesap silme talebini reddetmek istediğinize emin misiniz?")) {
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ id: userId, action: "rejectDelete" })
+      });
+      if (res.ok) {
+        setUsers(users.map(u => u.id === userId ? { ...u, deleteRequest: false } : u));
+        alert("Hesap silme talebi reddedildi.");
+      } else {
+        const data = await res.json();
+        alert(data.error || "Talebi reddederken bir hata oluştu.");
+      }
+    } catch {
+      alert("Talebi reddederken bir hata oluştu.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-900 dark:to-blue-950 flex items-center justify-center px-4">
@@ -179,13 +205,20 @@ export default function AdminUsersPage() {
                       {user.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.role.toLowerCase() === 'admin' 
-                          ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                          : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                      }`}>
-                        {user.role}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full w-fit ${
+                          user.role.toLowerCase() === 'admin' 
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        }`}>
+                          {user.role}
+                        </span>
+                        {user.deleteRequest && (
+                          <span className="inline-flex px-2 py-0.5 text-[9px] font-black rounded-full bg-rose-500 text-white animate-pulse w-fit uppercase tracking-wider">
+                            Silme Talebi
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {new Date(user.createdAt).toLocaleDateString('tr-TR')}
@@ -197,13 +230,31 @@ export default function AdminUsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        disabled={deletingUserId === user.id}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-                      >
-                        {deletingUserId === user.id ? "Siliniyor..." : "Sil"}
-                      </button>
+                      {user.deleteRequest ? (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            disabled={deletingUserId === user.id}
+                            className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition text-xs font-black shadow-sm"
+                          >
+                            {deletingUserId === user.id ? "Onaylanıyor..." : "Talebi Onayla"}
+                          </button>
+                          <button
+                            onClick={() => handleRejectDelete(user.id)}
+                            className="px-2.5 py-1.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition text-xs font-bold"
+                          >
+                            Reddet
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleDeleteUser(user.id)}
+                          disabled={deletingUserId === user.id}
+                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
+                        >
+                          {deletingUserId === user.id ? "Siliniyor..." : "Sil"}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

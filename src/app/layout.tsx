@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
+import Footer from "@/components/Footer";
 import ChatPopup from "@/components/ChatPopup";
 import { CartProvider } from "@/context/CartContext";
 import CartPopup from "@/components/CartPopup";
@@ -49,6 +50,7 @@ export default function RootLayout({
               <Navbar />
               <CartPopup />
               {children}
+              <Footer />
               <ChatPopup />
             </WishlistProvider>
           </CartProvider>

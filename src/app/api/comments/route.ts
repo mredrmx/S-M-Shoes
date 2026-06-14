@@ -40,13 +40,34 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
   const { productId, rating, text } = await req.json();
   if (!productId || !rating || !text) return NextResponse.json({ error: "Tüm alanlar zorunlu." }, { status: 400 });
+  
   try {
+    // Kullanıcının bu ürünü sipariş edip etmediğini kontrol et
+    const hasOrdered = await prisma.order.findFirst({
+      where: {
+        userId,
+        items: {
+          some: {
+            productId: Number(productId)
+          }
+        }
+      }
+    });
+
+    if (!hasOrdered) {
+      return NextResponse.json(
+        { error: "Yorum yazmak için önce bu ürünü sipariş etmiş olmalısınız." },
+        { status: 403 }
+      );
+    }
+
     const comment = await prisma.comment.create({
-      data: { userId, productId, rating, text },
+      data: { userId, productId: Number(productId), rating: Number(rating), text },
       include: { user: { select: { name: true, surname: true } } },
     });
     return NextResponse.json({ success: true, comment });
-  } catch {
+  } catch (error) {
+    console.error("Yorum ekleme hatası:", error);
     return NextResponse.json({ error: "Yorum eklenirken bir hata oluştu." }, { status: 500 });
   }
 } 

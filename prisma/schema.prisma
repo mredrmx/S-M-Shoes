@@ -6,9 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
-  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  provider = "sqlite"
+  url      = "file:./prisma/dev.db"
 }
 
 model User {
@@ -28,6 +27,7 @@ model User {
   wishlists Wishlist[]
   comments  Comment[]
   returnRequests ReturnRequest[]
+  deleteRequest Boolean @default(false)
 }
 
 model Product {
@@ -52,8 +52,8 @@ model Product {
 
 model Order {
   id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId    Int?
   status    String   @default("Beklemede") // "Onaylandı", "Gönderildi", "İptal Edildi" gibi
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -88,8 +88,9 @@ model Message {
 // Yeni Adres Modeli
 model Address {
   id            Int      @id @default(autoincrement())
-  userId        Int
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email         String?  // Misafir kullanıcılar için iletişim e-postası
   title         String   // Örn: "Ev", "İş Yeri"
   recipientName String
   recipientSurname String

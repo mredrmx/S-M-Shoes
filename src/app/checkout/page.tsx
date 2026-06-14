@@ -39,12 +39,25 @@ const HomeIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function CheckoutPage() {
   const router = useRouter();
   const { user } = useAuth();
+  
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  // Misafir siparişi için state'ler
+  const [guestForm, setGuestForm] = useState({
+    email: "",
+    recipientName: "",
+    recipientSurname: "",
+    phone: "",
+    city: "",
+    district: "",
+    neighborhood: "",
+    fullAddress: ""
+  });
 
   const fetchAddresses = async () => {
     const token = localStorage.getItem("token");
@@ -63,71 +76,107 @@ export default function CheckoutPage() {
   };
 
   useEffect(() => {
-    if (!user) {
-      router.push("/login?returnUrl=/checkout");
-      return;
+    // Giriş yapma kontrolünü kaldırıp misafir siparişi seçeneğini ekliyoruz.
+    if (user) {
+      fetchAddresses();
     }
-    fetchAddresses();
     // Sepeti localStorage'dan çek
     const cart = localStorage.getItem("cart");
     if (cart) setCartItems(JSON.parse(cart));
-  }, [user, router]);
+  }, [user]);
 
   // Sayfa görünürlüğü değiştiğinde (örn. /addresses'ten geri dönünce) adresleri tekrar çek
   useEffect(() => {
     const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === "visible" && user) {
         fetchAddresses();
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, []);
+  }, [user]);
 
   // Eğer query parametresinde refresh varsa adresleri tekrar çek
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.search.includes('refresh')) {
+    if (typeof window !== 'undefined' && window.location.search.includes('refresh') && user) {
       fetchAddresses();
     }
-  }, []);
+  }, [user]);
 
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => total + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0);
   };
 
+  const handleGuestInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setGuestForm({ ...guestForm, [e.target.name]: e.target.value });
+  };
+
   const handleOrder = async () => {
-    if (!selectedAddressId) {
-      setError("Lütfen bir adres seçin.");
+    if (user && !selectedAddressId) {
+      setError("Lütfen bir teslimat adresi seçin.");
       return;
     }
+
+    if (!user) {
+      // Misafir bilgileri doğrulaması
+      const { email, recipientName, recipientSurname, phone, city, district, neighborhood, fullAddress } = guestForm;
+      if (!email || !recipientName || !recipientSurname || !phone || !city || !district || !neighborhood || !fullAddress) {
+        setError("Lütfen misafir sipariş formundaki tüm zorunlu alanları doldurun.");
+        return;
+      }
+    }
+
     setLoading(true);
     setError("");
     const token = localStorage.getItem("token");
+
     try {
+      const payload: any = {
+        items: cartItems.map((item) => ({
+          productId: item.id,
+          quantity: item.quantity,
+          price: item.price,
+          color: item.color,
+          size: item.size,
+        }))
+      };
+
+      if (user) {
+        payload.addressId = selectedAddressId;
+      } else {
+        payload.guestAddress = {
+          ...guestForm,
+          title: "Misafir Adresi"
+        };
+      }
+
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({
-          items: cartItems.map((item) => ({
-            productId: item.id,
-            quantity: item.quantity,
-            price: item.price,
-            color: item.color,
-            size: item.size,
-          })),
-          addressId: selectedAddressId,
-        }),
+        body: JSON.stringify(payload),
       });
+
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Sipariş oluşturulamadı.");
       }
+
       setSuccess(true);
       localStorage.removeItem("cart");
-      setTimeout(() => router.push("/orders"), 1500);
+
+      // Kullanıcı giriş yaptıysa siparişler sayfasına yönlendir, misafir ise anasayfaya yönlendir
+      setTimeout(() => {
+        if (user) {
+          router.push("/orders");
+        } else {
+          alert("Siparişiniz başarıyla alındı! Alışverişiniz için teşekkür ederiz.");
+          router.push("/");
+        }
+      }, 1500);
+
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sipariş oluşturulamadı.");
     } finally {
@@ -136,147 +185,239 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-6 md:py-10 px-4">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-gray-900 dark:text-white">Ödeme & Sipariş Tamamlama</h1>
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      <h1 className="text-2.5xl md:text-3xl font-black mb-6 md:mb-8 text-gray-900 dark:text-white">Ödeme & Sipariş Tamamlama</h1>
       
       {error && (
-        <div className="mb-4 md:mb-6 p-4 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg">
+        <div className="mb-6 p-4 bg-red-100 dark:bg-red-950/20 text-red-700 dark:text-red-300 rounded-xl border border-red-200 dark:border-red-900/30 text-sm font-semibold">
           {error}
         </div>
       )}
       
       {success && (
-        <div className="mb-4 md:mb-6 p-4 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg">
-          Siparişiniz başarıyla oluşturuldu!
+        <div className="mb-6 p-4 bg-green-100 dark:bg-green-950/20 text-green-700 dark:text-green-300 rounded-xl border border-green-200 dark:border-green-900/30 text-sm font-semibold">
+          Siparişiniz başarıyla oluşturuldu! Yönlendiriliyorsunuz...
         </div>
       )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-        {/* Sol Taraf - Adres Seçimi */}
-        <div className="space-y-4 md:space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">Teslimat Adresi</h2>
-            <Link 
-              href="/addresses" 
-              className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
-            >
-              Adres Ekle
-            </Link>
-          </div>
-          
-          {addresses.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-              <HomeIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 mb-4">Kayıtlı adresiniz bulunmamaktadır.</p>
-              <Link 
-                href="/addresses" 
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Adres Ekle
-              </Link>
-            </div>
-          ) : (
+ 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* Sol Taraf - Adres ve İletişim Bilgileri */}
+        <div className="space-y-6">
+          {user ? (
+            /* Kayıtlı Kullanıcı Adres Seçimi */
             <div className="space-y-4">
-              <Listbox value={selectedAddressId} onChange={setSelectedAddressId}>
-                <div className="relative">
-                  <Listbox.Button className="w-full p-3 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    {addresses.find(a => a.id === selectedAddressId)?.title || "Adres seçiniz"}
-                  </Listbox.Button>
-                  <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                    {addresses.map(address => (
-                      <Listbox.Option
-                        key={address.id}
-                        value={address.id}
-                        className={({ active }) =>
-                          `cursor-pointer select-none relative py-2 pl-10 pr-4 ${active ? 'bg-blue-600 text-white' : 'text-gray-900 dark:text-gray-200'}`
-                        }
-                      >
-                        {({ selected }) => (
-                          <>
-                            <span className={`block truncate ${selected ? 'font-semibold' : ''}`}>{address.title}</span>
-                            {selected ? (
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                                ✓
-                              </span>
-                            ) : null}
-                          </>
-                        )}
-                      </Listbox.Option>
-                    ))}
-                  </Listbox.Options>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">Teslimat Adresi</h2>
+                <Link 
+                  href="/addresses" 
+                  className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-semibold"
+                >
+                  Adres Ekle
+                </Link>
+              </div>
+              
+              {addresses.length === 0 ? (
+                <div className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-2xl">
+                  <HomeIcon className="w-10 h-10 mx-auto text-gray-400 mb-3" />
+                  <p className="text-gray-500 dark:text-gray-400 mb-4 text-sm">Kayıtlı adresiniz bulunmamaktadır.</p>
+                  <Link 
+                    href="/addresses" 
+                    className="inline-flex items-center px-5 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition text-sm shadow-md"
+                  >
+                    Adres Ekle
+                  </Link>
                 </div>
-              </Listbox>
-              {selectedAddressId && (
-                <div className="mt-2 p-3 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                  {(() => {
-                    const address = addresses.find(a => a.id === selectedAddressId);
-                    if (!address) return null;
-                    return (
-                      <>
-                        <div className="font-semibold text-gray-900 dark:text-white mb-1">{address.title}</div>
-                        <div className="text-gray-600 dark:text-gray-300 text-sm mb-1">{address.recipientName} {address.recipientSurname}</div>
-                        <div className="text-gray-600 dark:text-gray-300 text-sm mb-1">{address.fullAddress}</div>
-                        <div className="text-gray-600 dark:text-gray-300 text-sm">{address.neighborhood}, {address.district}, {address.city}</div>
-                        <div className="text-gray-600 dark:text-gray-300 text-sm mt-1">📞 {address.phone}</div>
-                      </>
-                    );
-                  })()}
+              ) : (
+                <div className="space-y-4">
+                  <Listbox value={selectedAddressId} onChange={setSelectedAddressId}>
+                    <div className="relative">
+                      <Listbox.Button className="w-full p-3.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-850 dark:text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm font-semibold shadow-sm cursor-pointer">
+                        {addresses.find(a => a.id === selectedAddressId)?.title || "Adres seçiniz"}
+                      </Listbox.Button>
+                      <Listbox.Options className="absolute z-30 mt-1.5 max-h-60 w-full overflow-auto rounded-xl bg-white dark:bg-gray-950 py-1.5 text-sm shadow-xl border border-gray-100 dark:border-gray-800 focus:outline-none">
+                        {addresses.map(address => (
+                          <Listbox.Option
+                            key={address.id}
+                            value={address.id}
+                            className={({ active }) =>
+                              `cursor-pointer select-none relative py-3 pl-10 pr-4 ${active ? 'bg-blue-600 text-white' : 'text-gray-900 dark:text-gray-250'}`
+                            }
+                          >
+                            {({ selected }) => (
+                              <>
+                                <span className={`block truncate ${selected ? 'font-bold' : 'font-medium'}`}>{address.title}</span>
+                                {selected ? (
+                                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600 dark:text-white">
+                                    ✓
+                                  </span>
+                                ) : null}
+                              </>
+                            )}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </div>
+                  </Listbox>
+                  
+                  {selectedAddressId && (
+                    <div className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-250/30 dark:border-gray-800 text-sm leading-relaxed space-y-1 text-gray-700 dark:text-gray-300">
+                      {(() => {
+                        const address = addresses.find(a => a.id === selectedAddressId);
+                        if (!address) return null;
+                        return (
+                          <>
+                            <div className="font-bold text-gray-900 dark:text-white text-base mb-1">{address.title}</div>
+                            <div><span className="font-semibold text-gray-500">Alıcı:</span> {address.recipientName} {address.recipientSurname}</div>
+                            <div><span className="font-semibold text-gray-500">Adres:</span> {address.fullAddress}</div>
+                            <div><span className="font-semibold text-gray-500">Bölge:</span> {address.neighborhood}, {address.district}, {address.city}</div>
+                            <div><span className="font-semibold text-gray-500">Telefon:</span> {address.phone}</div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
               )}
+            </div>
+          ) : (
+            /* Misafir Sipariş Formu */
+            <div className="space-y-4">
+              <div className="flex flex-col mb-2">
+                <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">Misafir Alışveriş Bilgileri</h2>
+                <p className="text-xs text-gray-400">Üyeliğiniz yoksa bilgilerinizi girerek hızlıca sipariş verebilirsiniz.</p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    name="recipientName"
+                    placeholder="Ad *"
+                    value={guestForm.recipientName}
+                    onChange={handleGuestInputChange}
+                    className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
+                  />
+                  <input
+                    type="text"
+                    name="recipientSurname"
+                    placeholder="Soyad *"
+                    value={guestForm.recipientSurname}
+                    onChange={handleGuestInputChange}
+                    className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="E-posta Adresi *"
+                    value={guestForm.email}
+                    onChange={handleGuestInputChange}
+                    className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
+                  />
+                  <input
+                    type="tel"
+                    name="phone"
+                    placeholder="Telefon Numarası *"
+                    value={guestForm.phone}
+                    onChange={handleGuestInputChange}
+                    className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    name="city"
+                    placeholder="Şehir *"
+                    value={guestForm.city}
+                    onChange={handleGuestInputChange}
+                    className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
+                  />
+                  <input
+                    type="text"
+                    name="district"
+                    placeholder="İlçe *"
+                    value={guestForm.district}
+                    onChange={handleGuestInputChange}
+                    className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
+                  />
+                  <input
+                    type="text"
+                    name="neighborhood"
+                    placeholder="Mahalle *"
+                    value={guestForm.neighborhood}
+                    onChange={handleGuestInputChange}
+                    className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
+                  />
+                </div>
+
+                <textarea
+                  name="fullAddress"
+                  placeholder="Açık Adres (Sokak, Bina No, Daire, vb.) *"
+                  value={guestForm.fullAddress}
+                  onChange={handleGuestInputChange}
+                  rows={3}
+                  className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
+                />
+              </div>
             </div>
           )}
         </div>
 
         {/* Sağ Taraf - Sepet Özeti */}
-        <div className="space-y-4 md:space-y-6">
-          <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">Sipariş Özeti</h2>
+        <div className="space-y-6">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">Sipariş Özeti</h2>
           
           {cartItems.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-              <p className="text-gray-500 dark:text-gray-400">Sepetiniz boş.</p>
+            <div className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-2xl">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Sepetiniz boş.</p>
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="font-semibold text-gray-900 dark:text-white">Ürünler</h3>
+            <div className="bg-white dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+              <div className="p-4 border-b border-gray-200/50 dark:border-gray-800/80">
+                <h3 className="font-bold text-gray-900 dark:text-white text-sm">Ürünler</h3>
               </div>
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="divide-y divide-gray-100 dark:divide-gray-850">
                 {cartItems.map((item, idx) => (
                   <div key={idx} className="p-4 flex items-center gap-4">
                     {item.imageUrl && (
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.name}
-                        width={64}
-                        height={64}
-                        className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-                        unoptimized
-                      />
+                      <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 flex-shrink-0">
+                        <Image
+                          src={item.imageUrl}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+                      <h4 className="font-bold text-gray-900 dark:text-white truncate text-sm">
                         {item.name}
                       </h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {item.quantity} x ₺{Number(item.price).toFixed(2)}
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        {item.quantity} x ₺{Number(item.price).toLocaleString('tr-TR')}
                       </p>
                       {(item.size || item.color) && (
-                        <div className="text-xs text-gray-400 mt-1">
-                          {item.size && <span className="mr-2">Beden: {item.size}</span>}
-                          {item.color && <span>Renk: {item.color}</span>}
+                        <div className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold mt-1 space-x-2">
+                          {item.size && <span className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">Beden: {item.size}</span>}
+                          {item.color && <span className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">Renk: {item.color}</span>}
                         </div>
                       )}
                     </div>
-                    <div className="font-bold text-gray-900 dark:text-white">
-                      ₺{((Number(item.price) || 0) * (Number(item.quantity) || 0)).toFixed(2)}
+                    <div className="font-black text-gray-900 dark:text-white text-sm">
+                      ₺{((Number(item.price) || 0) * (Number(item.quantity) || 0)).toLocaleString('tr-TR')}
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="p-4 bg-gray-50 dark:bg-gray-700/50">
-                <div className="flex justify-between items-center text-lg font-bold text-gray-900 dark:text-white">
-                  <span>Toplam</span>
-                  <span>₺{getCartTotal().toFixed(2)}</span>
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/80 border-t border-gray-150 dark:border-gray-800">
+                <div className="flex justify-between items-center text-base font-black text-gray-900 dark:text-white">
+                  <span>Genel Toplam</span>
+                  <span>₺{getCartTotal().toLocaleString('tr-TR')}</span>
                 </div>
               </div>
             </div>
@@ -285,13 +426,13 @@ export default function CheckoutPage() {
           {/* Siparişi Tamamla Butonu */}
           <button
             onClick={handleOrder}
-            disabled={loading || !selectedAddressId || cartItems.length === 0}
-            className="w-full py-3 md:py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base md:text-lg"
+            disabled={loading || (user && !selectedAddressId) || cartItems.length === 0}
+            className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase tracking-wider"
           >
-            {loading ? "Sipariş oluşturuluyor..." : "Siparişi Tamamla"}
+            {loading ? "Siparişiniz alınıyor..." : "Siparişi Tamamla"}
           </button>
         </div>
       </div>
     </div>
   );
-} 
+}

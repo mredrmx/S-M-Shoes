@@ -66,7 +66,20 @@ export async function PUT(req: NextRequest) {
       data: { name, surname },
     });
 
-    return NextResponse.json({ user: { id: updatedUser.id, name: updatedUser.name, surname: updatedUser.surname, email: updatedUser.email, role: updatedUser.role } });
+    const token = jwt.sign(
+      { id: updatedUser.id, email: updatedUser.email, name: updatedUser.name, surname: updatedUser.surname, role: updatedUser.role },
+      JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    const response = NextResponse.json({ 
+      user: { id: updatedUser.id, name: updatedUser.name, surname: updatedUser.surname, email: updatedUser.email, role: updatedUser.role },
+      token
+    });
+
+    // Oturumun kopmaması için çerezdeki token'ı da güncelliyoruz
+    response.cookies.set('token', token, { path: '/', maxAge: 60 * 60 * 24 });
+    return response;
   } catch {
     return NextResponse.json(
       { error: "Profil güncellenemedi" },
@@ -81,12 +94,13 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
   }
   try {
-    await prisma.user.delete({ where: { id: userId } });
-    // Çıkış için token'ı temizle
-    const response = NextResponse.json({ success: true });
-    response.cookies.set('token', '', { maxAge: 0 });
-    return response;
+    // Hesabı doğrudan silmek yerine silme talebi bayrağını true yapıyoruz
+    await prisma.user.update({
+      where: { id: userId },
+      data: { deleteRequest: true }
+    });
+    return NextResponse.json({ success: true, message: "Hesap silme talebi admin paneline iletildi." });
   } catch {
-    return NextResponse.json({ error: 'Hesap silinemedi' }, { status: 500 });
+    return NextResponse.json({ error: 'Hesap silme talebi iletilemedi.' }, { status: 500 });
   }
 } 

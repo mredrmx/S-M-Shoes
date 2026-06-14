@@ -89,33 +89,43 @@ export async function DELETE(req: NextRequest) {
       }
     }
 
-    // Kullanıcının siparişleri ve adresleri varsa önce onları sil
-    await prisma.orderItem.deleteMany({
-      where: {
-        order: {
-          userId: id
-        }
-      }
-    });
-
-    await prisma.order.deleteMany({
-      where: { userId: id }
-    });
-
-    await prisma.address.deleteMany({
-      where: { userId: id }
-    });
-
-    // Kullanıcıyı sil
+    // Kullanıcıyı sil (onDelete: SetNull sayesinde siparişler ve adresler silinmeyecek, userId null olacaktır)
     await prisma.user.delete({
       where: { id }
     });
 
-    return NextResponse.json({ success: true, message: "Kullanıcı başarıyla silindi." });
+    return NextResponse.json({ success: true, message: "Kullanıcı başarıyla silindi (İşlemleri anonimleştirildi)." });
   } catch (error) {
     console.error("Kullanıcı silinirken hata:", error);
     return NextResponse.json(
       { error: "Kullanıcı silinirken bir hata oluştu." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  if (!(await isAdmin(req))) return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
+  
+  try {
+    const { id, action } = await req.json();
+    if (!id) {
+      return NextResponse.json({ error: "Kullanıcı ID zorunludur." }, { status: 400 });
+    }
+
+    if (action === "rejectDelete") {
+      await prisma.user.update({
+        where: { id: Number(id) },
+        data: { deleteRequest: false }
+      });
+      return NextResponse.json({ success: true, message: "Silme talebi reddedildi." });
+    }
+
+    return NextResponse.json({ error: "Geçersiz aksiyon." }, { status: 400 });
+  } catch (error) {
+    console.error("Kullanıcı güncellenirken hata:", error);
+    return NextResponse.json(
+      { error: "Kullanıcı güncellenirken bir hata oluştu." },
       { status: 500 }
     );
   }

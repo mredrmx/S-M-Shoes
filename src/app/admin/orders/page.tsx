@@ -23,13 +23,14 @@ type Order = {
     surname: string;
     email: string;
     address?: string;
-  };
+  } | null;
   items: OrderItem[];
   address?: {
     title: string;
     fullAddress: string;
     city: string;
     district: string;
+    email?: string;
   };
   returnRequests?: { reason: string }[];
 };
@@ -194,9 +195,21 @@ export default function AdminOrdersPage() {
                   <tr key={order.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer" onClick={() => setSelectedOrder(order)}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">#{order.id}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      <div>{order.user.name} {order.user.surname}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{order.user.email}</div>
-                      <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 max-w-xs truncate" title={order.user.address}>{order.user.address}</div>
+                      {order.user ? (
+                        <>
+                          <div>{order.user.name} {order.user.surname}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{order.user.email}</div>
+                        </>
+                      ) : (
+                        <div className="text-gray-400 italic font-semibold">
+                          {order.address?.email ? `Misafir (${order.address.email})` : "Anonim Müşteri (Silinmiş Hesap)"}
+                        </div>
+                      )}
+                      {order.address && (
+                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 max-w-xs truncate" title={order.address.fullAddress}>
+                          📍 {order.address.title}: {order.address.fullAddress}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                       <ul>
@@ -241,7 +254,12 @@ export default function AdminOrdersPage() {
           {selectedOrder && (
             <div>
               <h2 className="text-xl font-bold mb-2">Sipariş #{selectedOrder.id}</h2>
-              <div className="mb-2"><span className="font-semibold">Kullanıcı:</span> {selectedOrder.user?.name} {selectedOrder.user?.surname} ({selectedOrder.user?.email})</div>
+              <div className="mb-2">
+                <span className="font-semibold">Kullanıcı:</span>{" "}
+                {selectedOrder.user 
+                  ? `${selectedOrder.user.name} ${selectedOrder.user.surname} (${selectedOrder.user.email})` 
+                  : `Misafir / Anonim (${selectedOrder.address?.email || "Silinmiş Hesap"})`}
+              </div>
               <div className="mb-2"><span className="font-semibold">Adres:</span> {selectedOrder.address ? `${selectedOrder.address.title}, ${selectedOrder.address.fullAddress}, ${selectedOrder.address.city}/${selectedOrder.address.district}` : "-"}</div>
               <div className="mb-2"><span className="font-semibold">Ürünler:</span> {selectedOrder.items.map(i => `${i.product.name} (${i.quantity} x ${i.price}₺)`).join(", ")}</div>
               <div className="mb-2"><span className="font-semibold">Toplam:</span> {selectedOrder.items.reduce((t, i) => t + i.price * i.quantity, 0).toFixed(2)} ₺</div>

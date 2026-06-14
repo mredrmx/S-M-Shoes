@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
             where: { userId },
             include: { 
                 items: { include: { product: true } },
-                address: true
+                address: true,
+                returnRequests: true
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -44,12 +45,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const userId = await getUserIdFromRequest(req);
-  if (!userId) {
-    return NextResponse.json({ error: "Yetkisiz işlem" }, { status: 401 });
-  }
-
   const body = await req.json();
-  const { items, addressId } = body;
+  const { items, addressId, guestAddress } = body;
 
   if (!items || items.length === 0) {
     return NextResponse.json(
@@ -58,7 +55,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!addressId) {
+  if (!userId && !guestAddress) {
+    return NextResponse.json(
+      { error: "Misafir siparişi için adres bilgileri gereklidir." },
+      { status: 400 }
+    );
+  }
+
+  if (userId && !addressId) {
     return NextResponse.json(
       { error: "Adres seçimi zorunludur" },
       { status: 400 }
@@ -66,40 +70,84 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const address = await prisma.address.findUnique({
-      where: { id: addressId, userId: userId },
-    });
+    // Stok kontrolü ve sipariş oluşturma işlemini bir transaction ile yapalım
+    const order = await prisma.$transaction(async (tx) => {
+      // 1. Ürünlerin stoklarını kontrol et ve düşür
+      for (const item of items) {
+        const product = await tx.product.findUnique({
+          where: { id: Number(item.productId) }
+        });
 
-    if (!address) {
-      return NextResponse.json(
-        { error: "Geçersiz adres" },
-        { status: 404 }
-      );
-    }
+        if (!product) {
+          throw new Error(`Ürün bulunamadı (ID: ${item.productId})`);
+        }
 
-    const order = await prisma.order.create({
-      data: {
-        userId: userId,
-        addressId: addressId,
-        items: {
-          create: items.map((item: { productId: number; quantity: number; price: number; size?: string; color?: string }) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.price,
-            size: item.size,
-            color: item.color,
-          })),
+        if (product.stock < item.quantity) {
+          throw new Error(`${product.name} için yeterli stok yok. Mevcut stok: ${product.stock}`);
+        }
+
+        // Stoktan düş
+        await tx.product.update({
+          where: { id: product.id },
+          data: { stock: product.stock - item.quantity }
+        });
+      }
+
+      // 2. Adres belirleme (Kayıtlı kullanıcı veya Misafir)
+      let finalAddressId = addressId;
+      if (!userId && guestAddress) {
+        const newAddr = await tx.address.create({
+          data: {
+            userId: null,
+            email: guestAddress.email || null,
+            title: guestAddress.title || "Misafir Adresi",
+            recipientName: guestAddress.recipientName,
+            recipientSurname: guestAddress.recipientSurname,
+            phone: guestAddress.phone,
+            city: guestAddress.city,
+            district: guestAddress.district,
+            neighborhood: guestAddress.neighborhood,
+            fullAddress: guestAddress.fullAddress,
+          }
+        });
+        finalAddressId = newAddr.id;
+      } else if (userId && addressId) {
+        // Kayıtlı kullanıcının adresi gerçekten ona ait mi kontrol et
+        const address = await tx.address.findFirst({
+          where: { id: addressId, userId: userId },
+        });
+        if (!address) {
+          throw new Error("Geçersiz adres seçimi.");
+        }
+      }
+
+      // 3. Siparişi oluştur
+      return await tx.order.create({
+        data: {
+          userId: userId || null,
+          addressId: finalAddressId,
+          items: {
+            create: items.map((item: { productId: number; quantity: number; price: number; size?: string; color?: string }) => ({
+              productId: Number(item.productId),
+              quantity: item.quantity,
+              price: item.price,
+              size: item.size ? String(item.size) : null,
+              color: item.color ? String(item.color) : null,
+            })),
+          },
         },
-      },
-      include: {
-        items: true,
-      },
+        include: {
+          items: true,
+        },
+      });
     });
+
     return NextResponse.json(order, { status: 201 });
-  } catch {
+  } catch (error: any) {
+    console.error("Order creation error:", error);
     return NextResponse.json(
-      { error: "Sipariş oluşturulamadı" },
-      { status: 500 }
+      { error: error.message || "Sipariş oluşturulamadı" },
+      { status: 400 }
     );
   }
 } 

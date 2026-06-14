@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import AccountLayout from "@/components/AccountLayout";
 
 export default function ProfilePage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, login, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [form, setForm] = useState({ name: "", surname: "", email: "" });
@@ -52,6 +52,9 @@ export default function ProfilePage() {
       if (!res.ok) {
         throw new Error(data.error || "Profil güncellenirken bir hata oluştu.");
       }
+      if (data.token) {
+        login(data.token);
+      }
       setSuccess("Profil bilgileriniz başarıyla güncellendi.");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Profil güncellenirken bir hata oluştu.");
@@ -65,7 +68,7 @@ export default function ProfilePage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!confirm("Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) return;
+    if (!confirm("Hesabınızı silme talebini admin paneline göndermek istediğinize emin misiniz?")) return;
     setDeleteLoading(true);
     setDeleteError("");
     setDeleteSuccess("");
@@ -76,14 +79,13 @@ export default function ProfilePage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Hesap silinemedi.");
-      setDeleteSuccess("Hesabınız silindi. Giriş sayfasına yönlendiriliyorsunuz...");
+      if (!res.ok) throw new Error(data.error || "Hesap silme talebi iletilemedi.");
+      setDeleteSuccess("Hesap silme talebi admin paneline iletildi. Anasayfaya yönlendiriliyorsunuz...");
       setTimeout(() => {
-        localStorage.removeItem("token");
-        router.push("/login");
-      }, 2000);
+        router.push("/");
+      }, 3000);
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : "Hesap silinemedi.");
+      setDeleteError(err instanceof Error ? err.message : "Hesap silme talebi iletilemedi.");
     } finally {
       setDeleteLoading(false);
       setTimeout(() => setDeleteError(""), 3000);
@@ -172,7 +174,7 @@ export default function ProfilePage() {
             onClick={handleDeleteAccount}
             disabled={deleteLoading}
           >
-            {deleteLoading ? "Siliniyor..." : "Hesabı Silme Talebi Gönder"}
+            {deleteLoading ? "Talep Gönderiliyor..." : "Hesabı Silme Talebi Gönder"}
           </button>
           {deleteError && <div className="mt-3 p-2 bg-red-100 text-red-700 rounded text-sm">{deleteError}</div>}
           {deleteSuccess && <div className="mt-3 p-2 bg-green-100 text-green-700 rounded text-sm">{deleteSuccess}</div>}
