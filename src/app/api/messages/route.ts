@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
       let isOnline = false;
       if (adminUser.lastActive) {
         const diff = new Date().getTime() - new Date(adminUser.lastActive).getTime();
-        isOnline = diff < 1000 * 60 * 2;
+        isOnline = Math.abs(diff) < 1000 * 60 * 2;
       }
 
       return NextResponse.json({ 
@@ -101,8 +101,14 @@ export async function GET(req: NextRequest) {
       let isOnline = false;
       if (adminUser.lastActive) {
         const diff = new Date().getTime() - new Date(adminUser.lastActive).getTime();
-        isOnline = diff < 1000 * 60 * 2;
+        isOnline = Math.abs(diff) < 1000 * 60 * 2;
       }
+
+      // Admin'den müşteriye gelen mesajları okundu olarak işaretle
+      await prisma.message.updateMany({
+        where: { senderId: adminUser.id, receiverId: userId, isRead: false },
+        data: { isRead: true }
+      });
 
       const messages = await prisma.message.findMany({
         where: {
@@ -120,13 +126,38 @@ export async function GET(req: NextRequest) {
         admin: { id: adminUser.id, name: adminUser.name, surname: adminUser.surname, isOnline } 
       });
     } else {
-      // Admin: Kendisiyle ilgili tüm mesajları getir
-      const messages = await prisma.message.findMany({
-        where: { OR: [{ senderId: userId }, { receiverId: userId }] },
-        include: { sender: true, receiver: true },
-        orderBy: { createdAt: "asc" },
-      });
-      return NextResponse.json({ messages });
+      // Admin: Kendisiyle ilgili mesajları getir
+      const contactId = searchParams.get("contactId");
+      
+      if (contactId) {
+        const cId = Number(contactId);
+        
+        // Müşteriden admin'e gelen mesajları okundu olarak işaretle
+        await prisma.message.updateMany({
+          where: { senderId: cId, receiverId: userId, isRead: false },
+          data: { isRead: true }
+        });
+
+        const messages = await prisma.message.findMany({
+          where: {
+            OR: [
+              { senderId: userId, receiverId: cId },
+              { senderId: cId, receiverId: userId }
+            ]
+          },
+          include: { sender: true, receiver: true },
+          orderBy: { createdAt: "asc" },
+        });
+        return NextResponse.json({ messages });
+      } else {
+        // Genel mesaj çekimi (eski uyumluluk için)
+        const messages = await prisma.message.findMany({
+          where: { OR: [{ senderId: userId }, { receiverId: userId }] },
+          include: { sender: true, receiver: true },
+          orderBy: { createdAt: "asc" },
+        });
+        return NextResponse.json({ messages });
+      }
     }
   } catch (error) {
     console.error("Messages GET error:", error);

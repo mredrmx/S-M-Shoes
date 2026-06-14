@@ -31,7 +31,7 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 type Message = { id: number; senderId: number; receiverId: number; content: string; createdAt: string };
-type ChatUser = { id: number; name: string; surname: string; email: string; lastActive?: string };
+type ChatUser = { id: number; name: string; surname: string; email: string; lastActive?: string; unreadCount?: number };
 
 export default function ChatPopup() {
   const { user } = useAuth();
@@ -47,6 +47,7 @@ export default function ChatPopup() {
   // Admin paneli için state'ler
   const [chatUsers, setChatUsers] = useState<ChatUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<ChatUser | null>(null);
+  const [showOnlyUnread, setShowOnlyUnread] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +62,11 @@ export default function ChatPopup() {
     if (!token || !user) return;
 
     try {
-      const res = await fetch("/api/messages", {
+      const url = user.role.toLowerCase() === "admin" && selectedUser
+        ? `/api/messages?contactId=${selectedUser.id}`
+        : "/api/messages";
+
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error();
@@ -75,13 +80,9 @@ export default function ChatPopup() {
           setAdminInfo(data.admin);
         }
       } else {
-        // Admin: Mesajları al, eğer kullanıcı seçiliyse onunla olanları filtrele
+        // Admin: Seçili kullanıcı ile olan mesajları kaydet
         if (selectedUser) {
-          const filtered = data.messages.filter(
-            (m: Message) => (m.senderId === user.id && m.receiverId === selectedUser.id) || 
-                            (m.senderId === selectedUser.id && m.receiverId === user.id)
-          );
-          setMessages(filtered);
+          setMessages(data.messages || []);
         }
       }
     } catch {
@@ -318,26 +319,43 @@ export default function ChatPopup() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Aktif Görüşmeler</h4>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Aktif Görüşmeler</h4>
+                    <button
+                      onClick={() => setShowOnlyUnread(!showOnlyUnread)}
+                      className={`text-[9px] font-bold px-2 py-1 rounded-lg border transition-all cursor-pointer ${
+                        showOnlyUnread 
+                          ? 'bg-rose-500 text-white border-rose-500 hover:bg-rose-600' 
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-750'
+                      }`}
+                    >
+                      {showOnlyUnread ? 'Okunmamışlar Gösteriliyor' : 'Sadece Okunmamışlar'}
+                    </button>
+                  </div>
                   <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {chatUsers.map(u => {
-                      const isUserActive = u.lastActive ? (new Date().getTime() - new Date(u.lastActive).getTime() < 1000 * 60 * 3) : false;
-                      return (
-                        <button
-                          key={u.id}
-                          onClick={() => handleUserSelect(u)}
-                          className="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-left transition-colors cursor-pointer"
-                        >
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{u.name} {u.surname}</p>
-                            <p className="text-[10px] text-gray-500 truncate">{u.email}</p>
-                          </div>
-                          
-                          {/* Aktiflik Noktası */}
-                          <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isUserActive ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
-                        </button>
-                      );
-                    })}
+                    {chatUsers
+                      .filter(u => !showOnlyUnread || (u.unreadCount && u.unreadCount > 0))
+                      .map(u => {
+                        return (
+                          <button
+                            key={u.id}
+                            onClick={() => handleUserSelect(u)}
+                            className="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-left transition-colors cursor-pointer"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{u.name} {u.surname}</p>
+                              <p className="text-[10px] text-gray-500 truncate">{u.email}</p>
+                            </div>
+                            
+                            {/* Okunmamış Bildirim Rozeti */}
+                            {u.unreadCount && u.unreadCount > 0 ? (
+                              <span className="bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shrink-0">
+                                {u.unreadCount} YENİ
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
                   </div>
                 </div>
               )
@@ -414,6 +432,11 @@ export default function ChatPopup() {
         {/* Çevrimiçi Admin Bildirim Noktası (Müşteri için) */}
         {adminInfo?.isOnline && !isOpen && (!user || user.role.toLowerCase() !== "admin") && (
           <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-gray-950 rounded-full" />
+        )}
+
+        {/* Okunmamış Bildirim Noktası (Admin için) */}
+        {user?.role?.toLowerCase() === "admin" && chatUsers.some(u => u.unreadCount && u.unreadCount > 0) && !isOpen && (
+          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-rose-500 border-2 border-white dark:border-gray-950 rounded-full animate-bounce" />
         )}
       </button>
     </div>

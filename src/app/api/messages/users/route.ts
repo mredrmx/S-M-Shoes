@@ -53,7 +53,24 @@ export async function GET(req: NextRequest) {
         select: { id: true, name: true, surname: true, email: true, lastActive: true },
       });
 
-      return NextResponse.json({ users });
+      // Her kullanıcının admin için kaç adet okunmamış mesajı olduğunu hesapla
+      const usersWithUnread = await Promise.all(
+        users.map(async (u) => {
+          const unreadCount = await prisma.message.count({
+            where: {
+              senderId: u.id,
+              receiverId: userId,
+              isRead: false
+            }
+          });
+          return {
+            ...u,
+            unreadCount
+          };
+        })
+      );
+
+      return NextResponse.json({ users: usersWithUnread });
     } else {
       // Müşteri: Sadece adminleri listele (doğrudan adminle yazışacak)
       const admins = await prisma.user.findMany({

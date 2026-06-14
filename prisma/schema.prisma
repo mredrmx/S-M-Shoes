@@ -85,6 +85,7 @@ model Message {
   receiverId Int
   content   String
   createdAt DateTime @default(now())
+  isRead    Boolean  @default(false)
 }
 
 // Yeni Adres Modeli
